@@ -1,0 +1,37 @@
+[Unit]
+Description=Cloud Java Spring Boot Application Service
+Documentation=https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment.systemd
+After=network.target syslog.target
+
+[Service]
+Type=simple
+
+# 1. Tài khoản thực thi dịch vụ (Non-root user)
+User=java-runner
+Group=java-runner
+
+# 2. Thư mục làm việc và lệnh khởi chạy
+WorkingDirectory=/opt/java-app
+ExecStart=/usr/bin/java -Xms256m -Xmx512m -jar /opt/java-app/app.jar
+# Câu lệnh mô phỏng thay thế (nếu chưa có file JAR):
+# ExecStart=/usr/bin/bash -c "while true; do echo \"[$(date '+%%Y-%%m-%%d %%H:%%M:%%S')] Java Application running under user $(whoami)...\"; sleep 10; done"
+
+# 3. Chính sách tự động khởi động lại sau 10 giây khi xảy ra lỗi bất thường
+Restart=on-failure
+RestartSec=10s
+
+# 4. Quản lý nhật ký (Logs) qua Systemd Journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=java-app
+
+# 5. Cấu hình dừng an toàn (Graceful Shutdown) và mã thoát chuẩn của JVM
+TimeoutStopSec=30
+SuccessExitStatus=143
+
+# 6. Thiết lập tăng cường bảo mật hệ thống (Process Hardening)
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
